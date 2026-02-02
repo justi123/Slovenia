@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Marketplace</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .hidden {
+      display: none;
+    }
+    .item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+    .item small {
+      color: gray;
+    }
+    .logout {
+      background: #e74c3c;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 Student Marketplace</h1>
+  <p>Buy & Sell Student Items — Verified Students Only</p>
+</header>
+
+<div class="container" id="authSection">
+  <h2>Login / Register</h2>
+  <input type="email" id="email" placeholder="Student Email (.edu recommended)" />
+  <button onclick="login()">Login / Register</button>
+  <p><small>Email-only demo verification</small></p>
+</div>
+
+<div class="container hidden" id="marketplace">
+  <h2>Marketplace</h2>
+  <p id="userEmail"></p>
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <hr>
+
+  <h3>Post an Item</h3>
+  <input type="text" id="title" placeholder="Item title" />
+  <select id="category">
+    <option>Textbooks</option>
+    <option>Furniture</option>
+    <option>Electronics</option>
+    <option>Bikes / Skis</option>
+    <option>Festival Gear</option>
+  </select>
+  <input type="number" id="price" placeholder="Price (€)" />
+  <button onclick="addItem()">Post Item</button>
+
+  <hr>
+
+  <h3>Available Items</h3>
+  <div id="items"></div>
+</div>
+
+<script>
+  let currentUser = localStorage.getItem("currentUser");
+
+  function login() {
+    const email = document.getElementById("email").value;
+    if (!email) {
+      alert("Please enter an email");
+      return;
+    }
+    localStorage.setItem("currentUser", email);
+    currentUser = email;
+    showMarketplace();
+  }
+
+  function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+  }
+
+  function showMarketplace() {
+    document.getElementById("authSection").classList.add("hidden");
+    document.getElementById("marketplace").classList.remove("hidden");
+    document.getElementById("userEmail").innerText =
+      "Logged in as: " + currentUser;
+    loadItems();
+  }
+
+  function addItem() {
+    const title = document.getElementById("title").value;
+    const category = document.getElementById("category").value;
+    const price = document.getElementById("price").value;
+
+    if (!title || !price) {
+      alert("Fill all fields");
+      return;
+    }
+
+    const items = JSON.parse(localStorage.getItem("items")) || [];
+    items.push({
+      title,
+      category,
+      price,
+      seller: currentUser
+    });
+
+    localStorage.setItem("items", JSON.stringify(items));
+    loadItems();
+  }
+
+  function loadItems() {
+    const itemsDiv = document.getElementById("items");
+    itemsDiv.innerHTML = "";
+    const items = JSON.parse(localStorage.getItem("items")) || [];
+
+    items.forEach((item, index) => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <strong>${item.title}</strong><br>
+        Category: ${item.category}<br>
+        Price: €${item.price}<br>
+        <small>Seller: ${item.seller}</small><br>
+        ${item.seller === currentUser ? 
+          `<button onclick="deleteItem(${index})">Delete</button>` : ""}
+      `;
+      itemsDiv.appendChild(div);
+    });
+  }
+
+  function deleteItem(index) {
+    const items = JSON.parse(localStorage.getItem("items"));
+    items.splice(index, 1);
+    localStorage.setItem("items", JSON.stringify(items));
+    loadItems();
+  }
+
+  if (currentUser) {
+    showMarketplace();
+  }
+</script>
+
+</body>
+</html>
