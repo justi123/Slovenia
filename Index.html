@@ -1,86 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Student Marketplace</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #2c3e50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    .container {
-      max-width: 900px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 6px;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-    }
-    button {
-      background: #3498db;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #2980b9;
-    }
-    .hidden {
-      display: none;
-    }
-    .item {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 4px;
-    }
-    .item small {
-      color: gray;
-    }
-    .logout {
-      background: #e74c3c;
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Student Marketplace</title>
+
+<style>
+:root {
+  --bg: #f4f6f8;
+  --text: #000;
+  --card: #fff;
+  --primary: #3498db;
+}
+
+.dark {
+  --bg: #1e1e1e;
+  --text: #fff;
+  --card: #2c2c2c;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  background: var(--primary);
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  background: var(--card);
+  padding: 20px;
+  border-radius: 6px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+}
+
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.hidden { display: none; }
+
+.item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 15px;
+  border-radius: 4px;
+}
+
+.item img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+.chat-box {
+  border: 1px solid #aaa;
+  padding: 10px;
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.chat-msg {
+  margin-bottom: 5px;
+}
+
+.logout {
+  background: #e74c3c;
+}
+</style>
 </head>
+
 <body>
 
 <header>
-  <h1>🎓 Student Marketplace</h1>
-  <p>Buy & Sell Student Items — Verified Students Only</p>
+  <h2>🎓 Student Marketplace</h2>
+  <button onclick="toggleDark()">🌙 Dark Mode</button>
 </header>
 
-<div class="container" id="authSection">
-  <h2>Login / Register</h2>
-  <input type="email" id="email" placeholder="Student Email (.edu recommended)" />
-  <button onclick="login()">Login / Register</button>
-  <p><small>Email-only demo verification</small></p>
+<div class="container" id="auth">
+  <h3>Login</h3>
+  <input type="email" id="email" placeholder="Student email">
+  <button onclick="login()">Login</button>
 </div>
 
-<div class="container hidden" id="marketplace">
-  <h2>Marketplace</h2>
-  <p id="userEmail"></p>
+<div class="container hidden" id="market">
+  <p id="user"></p>
   <button class="logout" onclick="logout()">Logout</button>
 
   <hr>
 
-  <h3>Post an Item</h3>
-  <input type="text" id="title" placeholder="Item title" />
+  <h3>Post Item</h3>
+  <input id="title" placeholder="Title">
   <select id="category">
     <option>Textbooks</option>
     <option>Furniture</option>
@@ -88,94 +115,151 @@
     <option>Bikes / Skis</option>
     <option>Festival Gear</option>
   </select>
-  <input type="number" id="price" placeholder="Price (€)" />
-  <button onclick="addItem()">Post Item</button>
+  <input id="price" type="number" placeholder="Price €">
+  <input id="image" type="file" accept="image/*">
+  <button onclick="addItem()">Post</button>
 
   <hr>
 
-  <h3>Available Items</h3>
+  <h3>Marketplace</h3>
   <div id="items"></div>
 </div>
 
+<div class="container hidden" id="profile"></div>
+<div class="container hidden" id="chat"></div>
+
 <script>
-  let currentUser = localStorage.getItem("currentUser");
+let currentUser = localStorage.getItem("user");
+let dark = localStorage.getItem("dark") === "true";
+if (dark) document.body.classList.add("dark");
 
-  function login() {
-    const email = document.getElementById("email").value;
-    if (!email) {
-      alert("Please enter an email");
-      return;
-    }
-    localStorage.setItem("currentUser", email);
-    currentUser = email;
-    showMarketplace();
-  }
+function toggleDark() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("dark", document.body.classList.contains("dark"));
+}
 
-  function logout() {
-    localStorage.removeItem("currentUser");
-    location.reload();
-  }
+function login() {
+  const email = document.getElementById("email").value;
+  if (!email) return alert("Enter email");
+  localStorage.setItem("user", email);
+  currentUser = email;
+  showMarket();
+}
 
-  function showMarketplace() {
-    document.getElementById("authSection").classList.add("hidden");
-    document.getElementById("marketplace").classList.remove("hidden");
-    document.getElementById("userEmail").innerText =
-      "Logged in as: " + currentUser;
-    loadItems();
-  }
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
 
-  function addItem() {
-    const title = document.getElementById("title").value;
-    const category = document.getElementById("category").value;
-    const price = document.getElementById("price").value;
+function showMarket() {
+  auth.classList.add("hidden");
+  market.classList.remove("hidden");
+  user.innerText = "Logged in as: " + currentUser;
+  loadItems();
+}
 
-    if (!title || !price) {
-      alert("Fill all fields");
-      return;
-    }
+function addItem() {
+  const reader = new FileReader();
+  const file = image.files[0];
 
-    const items = JSON.parse(localStorage.getItem("items")) || [];
-    items.push({
-      title,
-      category,
-      price,
-      seller: currentUser
-    });
+  reader.onload = () => saveItem(reader.result);
+  if (file) reader.readAsDataURL(file);
+  else saveItem("");
+}
 
-    localStorage.setItem("items", JSON.stringify(items));
-    loadItems();
-  }
+function saveItem(img) {
+  const items = JSON.parse(localStorage.getItem("items")) || [];
+  items.push({
+    id: Date.now(),
+    title: title.value,
+    category: category.value,
+    price: price.value,
+    image: img,
+    seller: currentUser
+  });
+  localStorage.setItem("items", JSON.stringify(items));
+  loadItems();
+}
 
-  function loadItems() {
-    const itemsDiv = document.getElementById("items");
-    itemsDiv.innerHTML = "";
-    const items = JSON.parse(localStorage.getItem("items")) || [];
+function loadItems() {
+  items.innerHTML = "";
+  const data = JSON.parse(localStorage.getItem("items")) || [];
 
-    items.forEach((item, index) => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <strong>${item.title}</strong><br>
-        Category: ${item.category}<br>
-        Price: €${item.price}<br>
-        <small>Seller: ${item.seller}</small><br>
-        ${item.seller === currentUser ? 
-          `<button onclick="deleteItem(${index})">Delete</button>` : ""}
-      `;
-      itemsDiv.appendChild(div);
-    });
-  }
+  data.forEach(i => {
+    items.innerHTML += `
+      <div class="item">
+        ${i.image ? `<img src="${i.image}">` : ""}
+        <b>${i.title}</b><br>
+        ${i.category} – €${i.price}<br>
+        <small onclick="openProfile('${i.seller}')" style="cursor:pointer">
+          Seller: ${i.seller}
+        </small><br>
+        ${i.seller !== currentUser ?
+          `<button onclick="openChat(${i.id})">Chat with seller</button>` :
+          `<button onclick="deleteItem(${i.id})">Delete</button>`
+        }
+      </div>`;
+  });
+}
 
-  function deleteItem(index) {
-    const items = JSON.parse(localStorage.getItem("items"));
-    items.splice(index, 1);
-    localStorage.setItem("items", JSON.stringify(items));
-    loadItems();
-  }
+function deleteItem(id) {
+  let items = JSON.parse(localStorage.getItem("items"));
+  items = items.filter(i => i.id !== id);
+  localStorage.setItem("items", JSON.stringify(items));
+  loadItems();
+}
 
-  if (currentUser) {
-    showMarketplace();
-  }
+/* PROFILE */
+function openProfile(email) {
+  market.classList.add("hidden");
+  profile.classList.remove("hidden");
+
+  const items = JSON.parse(localStorage.getItem("items")) || [];
+  const list = items.filter(i => i.seller === email);
+
+  profile.innerHTML = `
+    <h3>Seller Profile</h3>
+    <p>${email}</p>
+    <button onclick="back()">Back</button>
+    <hr>
+    ${list.map(i => `<div>${i.title} – €${i.price}</div>`).join("")}
+  `;
+}
+
+/* CHAT */
+function openChat(id) {
+  market.classList.add("hidden");
+  chat.classList.remove("hidden");
+
+  const chats = JSON.parse(localStorage.getItem("chats")) || {};
+  const msgs = chats[id] || [];
+
+  chat.innerHTML = `
+    <h3>Chat</h3>
+    <div class="chat-box">
+      ${msgs.map(m => `<div class="chat-msg"><b>${m.user}:</b> ${m.text}</div>`).join("")}
+    </div>
+    <input id="msg" placeholder="Message">
+    <button onclick="sendMsg(${id})">Send</button>
+    <button onclick="back()">Back</button>
+  `;
+}
+
+function sendMsg(id) {
+  const chats = JSON.parse(localStorage.getItem("chats")) || {};
+  chats[id] = chats[id] || [];
+  chats[id].push({ user: currentUser, text: msg.value });
+  localStorage.setItem("chats", JSON.stringify(chats));
+  openChat(id);
+}
+
+function back() {
+  profile.classList.add("hidden");
+  chat.classList.add("hidden");
+  market.classList.remove("hidden");
+}
+
+if (currentUser) showMarket();
 </script>
 
 </body>
